@@ -1,4 +1,9 @@
 import cv2
+import numpy as np
+
+lower = np.array([0, 0, 0])      # Dark end of black color dectection params
+upper = np.array([90, 90, 90])   # Adjust based on how dark your line is
+
 
 cv2.namedWindow("preview")
 vc = cv2.VideoCapture(0) # change to 1 if you have a second camera, etc.
@@ -9,6 +14,7 @@ if vc.isOpened(): # try to get the first frame
     frame = res[1]
 else:
     rval = False
+    print("Error: Could not open video stream") 
 
 while rval:
     # Lese zuerst das nächste Frame
@@ -18,7 +24,16 @@ while rval:
     if not rval:
         break
 
-    # Größe aus dem Frame bestimmen (Breite = shape[1], Höhe = shape[0])
+
+
+        # median blur
+    median = cv2.medianBlur(frame, 5)#donoise for detection
+    
+    # threshold on black
+    thresh = cv2.inRange(median, lower, upper)
+
+    cv2.imshow("threshold", thresh)
+        # Größe aus dem Frame bestimmen (Breite = shape[1], Höhe = shape[0])
     h, w = frame.shape[:2]
     cx = w // 2
 
@@ -26,7 +41,7 @@ while rval:
     cv2.line(frame, (cx, 0), (cx, h), (0, 255, 0), 5)
 
     # Dann Bild anzeigen und auf Taste warten
-    cv2.imshow("preview", frame)
+    cv2.imshow("camerafeed", frame)
     key = cv2.waitKey(20)
     if key == 27:
         break
